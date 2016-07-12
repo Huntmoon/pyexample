@@ -1,4 +1,5 @@
 import pandas as  pd
+
 """查询每个项目QPM最大的前10个方法"""
 df = pd.DataFrame.from_csv("E:\Downloads\sm_dubbo_invoke (1).csv", header=None, parse_dates=False, encoding="UTF-8")
 df.columns = ["invoke_date", "service_id", "service", "method_id", "method", "consumer", "provider", "type",
@@ -31,4 +32,24 @@ def cal(df, name):
         dfr.to_csv("F:/qps/{}.csv".format(app))
 
 
-cal(dfa, None)
+def cal_all_app(df):
+    dfapp = df.groupby(["app","service", "method"])
+    result = []
+    for k, row in dfapp:
+        s = row.ix[row["success"].idxmax()]
+        print(s)
+        row1 = {}
+        row1["app"] = k[0]
+        row1["service"] = k[1]
+        row1["method"] = k[2]
+        row1["qpm"] = s["success"]
+        row1["qps"] = s["success"] / 60
+        row1["max_concurrent"] = s["max_concurrent"]
+        row1["avg_res_time"] = s["elapsed"] / s["success"]
+        result.append(row1)
+    df1 = pd.DataFrame.from_dict(result)
+    dfr = df1.sort("qpm", ascending=False)
+    dfr.to_csv("F:/qps/{}.csv".format("all"))
+
+
+cal_all_app(dfa)
